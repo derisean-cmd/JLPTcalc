@@ -1,5 +1,21 @@
-venv/
-.venv/
+# System junk
+desktop.ini
+Thumbs.db
+
+# Large media files
+*.pdf
+*.mp3
+*.doc
+*.docx
+
+# Database & environment
 *.db
-*.sqlite
+.env
 __pycache__/
+*.pyc
+
+# Keep info.json but block everything else in papers
+papers/**/*.pdf
+papers/**/*.mp3
+papers/**/desktop.ini
+!papers/**/info.json
