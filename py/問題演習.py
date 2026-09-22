@@ -2,10 +2,10 @@ import streamlit as st
 import sqlite3
 import json
 import os
+import re
 from streamlit_pdf_viewer import pdf_viewer
 
 # ---------- ページ設定 ----------
-
 st.set_page_config(
     page_title="JLPT計算",
     page_icon="🇯🇵",
@@ -23,9 +23,9 @@ if "username" not in st.session_state:
 if not st.session_state.logged_in:
     st.title("🔐 JLPT N1 能力試験 練習ポータル")
     
-    tab1, tab2 = st.tabs(["ログイン", "新規登録"])
+    tab_login, tab_reg = st.tabs(["ログイン", "新規登録"])
     
-    with tab1:
+    with tab_login:
         with st.form("login_form"):
             user = st.text_input("ユーザー名")
             pwd = st.text_input("パスワード", type="password")
@@ -41,7 +41,7 @@ if not st.session_state.logged_in:
                     st.error("❌ ユーザー名またはパスワードが違います")
                 conn.close()
     
-    with tab2:
+    with tab_reg:
         with st.form("reg_form"):
             new_user = st.text_input("ユーザー名を入力")
             new_pwd = st.text_input("パスワードを設定", type="password")
@@ -67,125 +67,223 @@ if st.button("🚪 ログアウト"):
     st.session_state.logged_in = False
     st.rerun()
 
+# ---------- Calculate Scores ----------
+def calculate_scores(user_answers, paper):
+    ak = paper["answer_key"]
+    wts = paper["scoring_weights"]
+    sf = paper["score_formula"]
+    result = {}
+    for section_name, config in sf.items():
+        earned = 0
+        possible = 0
+        for qid, user_choice in user_answers.items():
+            belongs = any(qid.startswith(prefix) for prefix in config["prefix"])
+            if not belongs:
+                continue
+            weight = wts.get(qid, 1)
+            possible += weight
+            if str(user_choice) == str(ak.get(qid, "")):
+                earned += weight
+        result[section_name] = round((earned / possible) * config["max"], 1) if possible > 0 else 0
+    result["total"] = round(
+        result["vocab_grammar"] + result["reading"] + result["listening"], 1
+    )
+    return result
+
 # ---------- 問題用紙選択 ----------
 PAPERS_ROOT = r"C:\Users\ngcsi\Desktop\Haruki\JLPTcalc\papers"
-# ✅ THIS LINE reads ALL folder names inside "papers"
 paper_list = [f for f in os.listdir(PAPERS_ROOT) 
               if os.path.isdir(os.path.join(PAPERS_ROOT, f))]
-
 if not paper_list:
     st.warning("⚠️ papersフォルダに問題用紙を追加してください")
     st.stop()
 
-# ✅ THIS LINE shows them in dropdown
 selected_paper = st.selectbox("📖 問題用紙を選択", paper_list)
-
-# ✅ THIS LINE builds the path = folder name + "info.json"
 path = os.path.join(PAPERS_ROOT, selected_paper, "info.json")
-
 with open(path, encoding="utf-8") as f:
     p = json.load(f)
 
 st.subheader(f"📝 {p['name']}")
 
-# ---------- 画面分割 ----------
-col_left, col_right = st.columns([3, 1])
+# ---------- State Management ----------
+state_key = f"state_{selected_paper}"
+if state_key not in st.session_state:
+    st.session_state[state_key] = {
+        "p1_ans": {}, "p1_done": False, "p1_scores": None,
+        "p2_ans": {}, "p2_done": False, "p2_scores": None
+    }
+ps = st.session_state[state_key]
 
-# ========== 左：問題PDF + 音声 ==========
-with col_left:
-    st.subheader("📄 問題用紙 & 🎧 聴解音声")
-    max_page = len(p["page_guide"])
-    page = st.number_input("ページ", min_value=1, max_value=max_page, value=1)
-    st.caption(f"📍 {p['page_guide'][str(page)]}")
+# ==================================================
+# 🔹 SIDE-BY-SIDE LAYOUT — PDF LEFT | ANSWERS RIGHT
+# ==================================================
+col_pdf, col_ans = st.columns([3, 2])  # Left wider, right slightly narrower
 
-    
-    
-    # PDF表示
+# ========== LEFT PANEL: PDF ALWAYS HERE ==========
+with col_pdf:
+    st.subheader("📄 問題用紙")
     pdf_path = os.path.join(PAPERS_ROOT, selected_paper, p["pdf"])
+    
     if os.path.exists(pdf_path):
-        pdf_viewer(pdf_path, pages_to_render=[page])
+        with open(pdf_path, "rb") as f:
+            content = f.read().decode("latin-1")
+        all_page_markers = re.findall(r"/Type\s*/Page[^s]", content)
+        total_pages = len(all_page_markers) or 16
+        st.markdown(f"<h5 style='text-align:center;'>全 {total_pages} ページ</h5>", unsafe_allow_html=True)
+        st.caption("スクロールして問題を見てください")
+        pdf_viewer(input=pdf_path, width="100%", height=750)  # ✅ Tall enough to scroll
+    else:
+        st.error(f"❌ PDFが見つかりません: {p['pdf']}")
     
-    # 音声再生
-    audio_path = os.path.join(PAPERS_ROOT, selected_paper, p["audio"])
-    if os.path.exists(audio_path):
-        with open(audio_path, "rb") as af:
-            st.audio(af.read(), format="audio/mp3")
 
-# ========== 右：回答入力 ==========
-with col_right:
-    st.subheader("✍️ 回答を記入")
-    ans = {}
+# ========== RIGHT PANEL: ANSWER TABS ==========
+with col_ans:
+    tab1, tab2, tab3 = st.tabs(["📖 Part1: 筆記", "👂 Part2: 聴解", "📊 結果"])
     
-    # --- 言語知識（文字・語彙）---
-    with st.expander("📝 言語知識（文字・語彙）問題1～7", expanded=True):
-        for q in ["Q1","Q2","Q3","Q4","Q5","Q6","Q7"]:
-            ans[q] = st.radio(q, [1,2,3,4], horizontal=True, key=f"a_{q}")
+    # ---------- Part1 Tab ----------
+    with tab1:
+        if ps["p1_done"]:
+            st.success("✅ Part1 回答済み")
+            s = ps["p1_scores"]
+            st.metric("📝 語彙・文法", f"{s['vocab_grammar']:.1f}/59",
+                      "✅" if s["vocab_grammar"] >= 19 else "⚠️ 要復習")
+            st.metric("📖 読解", f"{s['reading']:.1f}/60",
+                      "✅" if s["reading"] >= 19 else "⚠️ 要復習")
+            if st.button("🔄 再挑戦", key="reset_p1"):
+                ps["p1_done"] = False
+                ps["p1_answers"] = {}
+                st.rerun()
+        else:
+            st.subheader("✍️ 回答を記入")
+            p1_ans = {}
+
+            # === SCROLLABLE Answer Sheet Container ===
+            with st.container(height=800):  # ✅ Scrollable! Adjust height if needed
+                for section in p["parts"]["part1"]["sections"]:
+                    sec_id = section["id"]
+                    with st.expander(f"{section['title']}", expanded=section.get("open", False)):
+                        for mondai in section["mondai"]:
+                            st.markdown(f"**{mondai['name']}**")
+                            for q in mondai["questions"]:
+                                qid = f"{sec_id}_{q}"
+                                p1_ans[qid] = st.radio(
+                                    f"{q}",
+                                    [1, 2, 3, 4],
+                                    horizontal=True,
+                                    key=f"p1_{selected_paper}_{qid}"
+                                )
+                            st.divider()
+
+            if st.button("📤 Part1 採点", type="primary", use_container_width=True):
+                ps["p1_answers"] = p1_ans
+                # ✅ Use empty dict if p2_answers doesn't exist yet
+                all_ans = {**p1_ans, **ps.get("p2_answers", {})}
+                scores = calculate_scores(all_ans, p)
+                ps["p1_scores"] = scores
+                ps["p1_done"] = True
+                st.rerun()
     
-    # --- 言語知識（文法）---
-    with st.expander("📝 言語知識（文法）問題8～14"):
-        for q in ["Q8","Q9","Q10","Q11","Q12","Q13","Q14"]:
-            ans[q] = st.radio(q, [1,2,3,4], horizontal=True, key=f"a_{q}")
+    # ---------- Part2 Tab ----------
+    with tab2:
+        if ps["p2_done"]:
+            st.success("✅ Part2 回答済み")
+            s = ps["p2_scores"]
+            st.metric("🎧 聴解", f"{s['listening']:.1f}/59",
+                      "✅" if s["listening"] >= 19 else "⚠️ 要復習")
+            if st.button("🔄 再挑戦", key="reset_p2"):
+                ps["p2_done"] = False
+                ps["p2_answers"] = {}
+                st.rerun()
+        else:
+            st.subheader("✍️ 回答を記入")
+            p2_ans = {}
+
+            # ✅ ONLY ONE audio player — right at the top
+            audio_path = os.path.join(PAPERS_ROOT, selected_paper, p["audio"])
+            if os.path.exists(audio_path):
+                st.audio(audio_path)  # ← ONE here
+            else:
+                st.warning("⚠️ 音声ファイルが見つかりません")
+
+            # === SCROLLABLE Answer Sheet Container ===
+            with st.container(height=800):
+                for section in p["parts"]["part2"]["sections"]:
+                    sec_id = section["id"]
+                    with st.expander(f"{section['title']}", expanded=True):
+                        for mondai in section["mondai"]:
+                            st.markdown(f"**{mondai['name']}**")
+                            for q in mondai["questions"]:
+                                qid = f"{sec_id}_{mondai['name'].replace('問題','')}_{q}"
+                                p2_ans[qid] = st.radio(
+                                    f"{q}",
+                                    [1, 2, 3, 4],
+                                    horizontal=True,
+                                    key=f"p2_{selected_paper}_{qid}"
+                                )
+                            st.divider()
+
+            if st.button("📤 Part2 採点", type="primary", use_container_width=True):
+                ps["p2_answers"] = p2_ans
+                # ✅ Use empty dict if p1_answers doesn't exist yet
+                all_ans = {**ps.get("p1_answers", {}), **p2_ans}
+                scores = calculate_scores(all_ans, p)
+                ps["p2_scores"] = scores
+                ps["p2_done"] = True
+                st.rerun()
     
-    # --- 読解 ---
-    with st.expander("📖 読解 問題15～31"):
-        for q in ["Q15","Q16","Q17","Q18","Q19","Q20",
-                  "Q21","Q22","Q23","Q24","Q25",
-                  "Q26","Q27","Q28","Q29","Q30","Q31"]:
-            ans[q] = st.radio(q, [1,2,3,4], horizontal=True, key=f"a_{q}")
-    
-    # --- 聴解 ---
-    with st.expander("👂 聴解 問題1～5"):
-        for q in ["L1","L2","L3","L4","L5","L6",
-                  "L7","L8","L9","L10","L11","L12",
-                  "L13","L14","L15","L16","L17","L18",
-                  "L19","L20","L21","L22","L23","L24","L25",
-                  "L26","L27","L28","L29","L30","L31",
-                  "L32","L33","L34"]:
-            ans[q] = st.radio(q, [1,2,3,4], horizontal=True, key=f"a_{q}")
-    
-    # --- 採点実行 ---
-    if st.button("📤 回答を送信して採点", type="primary", use_container_width=True):
-        key = p["answer_key"]
-        w = p["scoring_weights"]
+    # ---------- Results Tab ----------
+    with tab3:
+        st.subheader("📊 総合結果")
         
-        # 各部の点数計算
-        goi = sum(w[q] for q in ["Q1","Q2","Q3","Q4","Q5","Q6","Q7"] if ans[q] == key[q])
-        bunpou = sum(w[q] for q in ["Q8","Q9","Q10","Q11","Q12","Q13","Q14"] if ans[q] == key[q])
-        dokkai = sum(w[q] for q in ["Q15","Q16","Q17","Q18","Q19","Q20",
-                                      "Q21","Q22","Q23","Q24","Q25",
-                                      "Q26","Q27","Q28","Q29","Q30","Q31"] if ans[q] == key[q])
-        choukai = sum(w[q] for q in ["L1","L2","L3","L4","L5","L6",
-                                      "L7","L8","L9","L10","L11","L12",
-                                      "L13","L14","L15","L16","L17","L18",
-                                      "L19","L20","L21","L22","L23","L24","L25",
-                                      "L26","L27","L28","L29","L30","L31",
-                                      "L32","L33","L34"] if ans[q] == key[q])
-        
-        gengo_total = goi + bunpou
-        total = gengo_total + dokkai + choukai
-        passed = total >= 100 and gengo_total >= 19 and dokkai >= 19 and choukai >= 19
-        
-        # 結果表示
-        st.subheader("📊 採点結果")
-        c1, c2, c3 = st.columns(3)
-        c1.metric("📝 言語知識", f"{gengo_total:.1f}/59", "✅ 合格" if gengo_total>=19 else "⚠️ 19点以上必要")
-        c2.metric("📖 読解", f"{dokkai:.1f}/60", "✅ 合格" if dokkai>=19 else "⚠️ 19点以上必要")
-        c3.metric("👂 聴解", f"{choukai:.1f}/59", "✅ 合格" if choukai>=19 else "⚠️ 19点以上必要")
-        
-        st.divider()
-        st.header(f"🎯 総合得点：{total:.1f}/180 — {'✅ 合格！' if passed else '❌ 不合格'}")
-        
-        # 履歴に保存
-        conn = sqlite3.connect("jlpt.db")
-        c = conn.cursor()
-        c.execute("""
-            INSERT INTO results 
-            (username, paper_name, vocab_grammar, reading, listening, total, passed)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (st.session_state.username, p["name"], gengo_total, dokkai, choukai, total, "合格" if passed else "不合格"))
-        conn.commit()
-        conn.close()
-        st.success("✅ 履歴に保存しました！")
+        if not ps["p1_done"] and not ps["p2_done"]:
+            st.info("まずは Part1 または Part2 から回答してください")
+        else:
+            c1, c2, c3 = st.columns(3)
+            with c1:
+                if ps["p1_done"]:
+                    st.metric("📝 言語知識", f"{ps['p1_scores']['vocab_grammar']:.1f}/60",
+                              "✅" if ps["p1_scores"]["vocab_grammar"] >= 19 else "⚠️")
+                else:
+                    st.metric("📝 言語知識", "未実施")
+            with c2:
+                if ps["p1_done"]:
+                    st.metric("📖 読解", f"{ps['p1_scores']['reading']:.1f}/60",
+                              "✅" if ps["p1_scores"]["reading"] >= 19 else "⚠️")
+                else:
+                    st.metric("📖 読解", "未実施")
+            with c3:
+                if ps["p2_done"]:
+                    st.metric("👂 聴解", f"{ps['p2_scores']['listening']:.1f}/60",
+                              "✅" if ps["p2_scores"]["listening"] >= 19 else "⚠️")
+                else:
+                    st.metric("👂 聴解", "未実施")
+            
+            if ps["p1_done"] and ps["p2_done"]:
+                total = ps["p1_scores"]["vocab_grammar"] + ps["p1_scores"]["reading"] + ps["p2_scores"]["listening"]
+                passed = (total >= 100 and 
+                          ps["p1_scores"]["vocab_grammar"] >= 19 and 
+                          ps["p1_scores"]["reading"] >= 19 and 
+                          ps["p2_scores"]["listening"] >= 19)
+                
+                st.divider()
+                st.header(f"🎯 総合得点：{total:.1f}/180 — {'✅ 合格！' if passed else '❌ 不合格'}")
+                
+                if "saved_final" not in st.session_state[state_key]:
+                    conn = sqlite3.connect("jlpt.db")
+                    c = conn.cursor()
+                    c.execute("""
+                        INSERT INTO results 
+                        (username, paper_name, vocab_grammar, reading, listening, total, passed)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """, (st.session_state.username, p["name"],
+                          ps["p1_scores"]["vocab_grammar"], ps["p1_scores"]["reading"],
+                          ps["p2_scores"]["listening"], total, "合格" if passed else "不合格"))
+                    conn.commit()
+                    conn.close()
+                    st.session_state[state_key]["saved_final"] = True
+                    st.success("✅ 履歴に保存しました！")
+            else:
+                st.info("📌 両方のパートを完了すると総合得点が表示されます")
 
 # ---------- 学習履歴 ----------
 st.divider()
@@ -200,9 +298,9 @@ if rows:
     for r in rows:
         st.write(f"📅 {r[0]} — **{r[1]}**")
         st.markdown(f"""
-        - 📝 言語知識：{r[2]:.1f}/59
+        - 📝 言語知識：{r[2]:.1f}/60
         - 📖 読解：{r[3]:.1f}/60
-        - 👂 聴解：{r[4]:.1f}/59
+        - 👂 聴解：{r[4]:.1f}/60
         - 🎯 総合得点：**{r[5]:.1f}/180** — {'✅ 合格' if r[6]=="合格" else '❌ 不合格'}
         """)
         st.divider()
