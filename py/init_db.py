@@ -42,7 +42,8 @@ CREATE TABLE IF NOT EXISTS results (
     listening REAL,
     total REAL,
     passed TEXT,
-    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_archived INTEGER DEFAULT 0
 )
 """)
 

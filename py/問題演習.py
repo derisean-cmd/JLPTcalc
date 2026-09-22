@@ -5,7 +5,13 @@ import os
 from streamlit_pdf_viewer import pdf_viewer
 
 # ---------- ページ設定 ----------
-st.set_page_config(page_title="JLPT N1 練習", layout="wide")
+
+st.set_page_config(
+    page_title="JLPT計算",
+    page_icon="🇯🇵",
+    initial_sidebar_state="expanded",
+    menu_items={}
+)
 
 # ---------- セッション管理 ----------
 if "logged_in" not in st.session_state:
