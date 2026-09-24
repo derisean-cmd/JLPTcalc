@@ -1,0 +1,175 @@
+{
+  "name": "２０１７年１２月 N1 日本語能力試験",
+  "pdf": "２０１７年１２月Ｎ１問題集.pdf",
+  "audio": "２０１７年１２月Ｎ１聴解.mp3",
+  "parts": {
+    "part1": {
+      "sections": [
+        {
+          "id": "goi",
+          "title": "📚 語彙",
+          "open": true,
+          "mondai": [
+            {
+              "name": "問題1",
+              "questions": ["1","2","3","4","5","6"]
+            },
+            {
+              "name": "問題2",
+              "questions": ["7","8","9","10","11","12","13"]
+            },
+            {
+              "name": "問題3",
+              "questions": ["14","15","16","17","18","19"]
+            },
+            {
+              "name": "問題4",
+              "questions": ["20","21","22","23","24","25"]
+            }
+          ]
+        },
+        {
+          "id": "bunpou",
+          "title": "✍️ 文法",
+          "open": false,
+          "mondai": [
+            {
+              "name": "問題5",
+              "questions": ["26","27","28","29","30","31","32","33","34","35"]
+            },
+            {
+              "name": "問題6",
+              "questions": ["36","37","38","39","40"]
+            },
+            {
+              "name": "問題7",
+              "questions": ["41","42","43","44","45"]
+            }
+          ]
+        },
+        {
+          "id": "dokkai",
+          "title": "📖 読解",
+          "open": false,
+          "mondai": [
+            {
+              "name": "問題8",
+              "questions": ["46","47","48","49"]
+            },
+            {
+              "name": "問題9",
+              "questions": ["50","51","52","53","54","55","56","57","58"]
+            },
+            {
+              "name": "問題10",
+              "questions": ["59","60","61","62"]
+            },
+            {
+              "name": "問題11",
+              "questions": ["63","64"]
+            },
+            {
+              "name": "問題12",
+              "questions": ["65","66","67","68"]
+            },
+            {
+              "name": "問題13",
+              "questions": ["69","70"]
+            }
+          ]
+        }
+      ]
+    },
+    "part2": {
+      "sections": [
+        {
+          "id": "choukai",
+          "title": "🎧 聴解",
+          "open": true,
+          "mondai": [
+            {
+              "name": "問題1",
+              "questions": ["1","2","3","4","5","6"]
+            },
+            {
+              "name": "問題2",
+              "questions": ["1","2","3","4","5","6"]
+            },
+            {
+              "name": "問題3",
+              "questions": ["1","2","3","4","5","6"]
+            },
+            {
+              "name": "問題4",
+              "questions": ["1","2","3","4","5","6","7","8","9","10","11","12","13"]
+            },
+            {
+              "name": "問題5",
+              "questions": ["1","2","3a","3b"]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "answer_key": {
+    "goi_1": "1", "goi_2": "1", "goi_3": "4", "goi_4": "3", "goi_5": "2", "goi_6": "3",
+    "goi_7": "4", "goi_8": "2", "goi_9": "3", "goi_10": "1", "goi_11": "2", "goi_12": "4", "goi_13": "2",
+    "goi_14": "4", "goi_15": "3", "goi_16": "2", "goi_17": "1", "goi_18": "3", "goi_19": "2",
+    "goi_20": "2", "goi_21": "4", "goi_22": "1", "goi_23": "4", "goi_24": "1", "goi_25": "3",
+    "bunpou_26": "1", "bunpou_27": "2", "bunpou_28": "4", "bunpou_29": "3", "bunpou_30": "3",
+    "bunpou_31": "3", "bunpou_32": "4", "bunpou_33": "1", "bunpou_34": "1", "bunpou_35": "2",
+    "bunpou_36": "1", "bunpou_37": "4", "bunpou_38": "3", "bunpou_39": "2", "bunpou_40": "2",
+    "bunpou_41": "4", "bunpou_42": "1", "bunpou_43": "1", "bunpou_44": "2",
+    "bunpou_45": "3", "dokkai_46": "2", "dokkai_47": "4", "dokkai_48": "3",
+    "dokkai_49": "2", "dokkai_50": "3", "dokkai_51": "1", "dokkai_52": "3", "dokkai_53": "2",
+    "dokkai_54": "1", "dokkai_55": "4", "dokkai_56": "4", "dokkai_57": "1",
+    "dokkai_58": "2", "dokkai_59": "3", "dokkai_60": "4", "dokkai_61": "1",
+    "dokkai_62": "4", "dokkai_63": "4",
+    "dokkai_64": "2", "dokkai_65": "1", "dokkai_66": "3", "dokkai_67": "2", "dokkai_68": "3",
+    "dokkai_69": "1", "dokkai_70": "3",
+    "choukai_1_1": "2", "choukai_1_2": "1", "choukai_1_3": "4", "choukai_1_4": "3", "choukai_1_5": "3", "choukai_1_6": "4",
+    "choukai_2_1": "3", "choukai_2_2": "4", "choukai_2_3": "3", "choukai_2_4": "1", "choukai_2_5": "1", "choukai_2_6": "2",
+    "choukai_3_1": "3", "choukai_3_2": "4", "choukai_3_3": "2", "choukai_3_4": "4", "choukai_3_5": "1", "choukai_3_6": "2",
+    "choukai_4_1": "3", "choukai_4_2": "2", "choukai_4_3": "1", "choukai_4_4": "3", "choukai_4_5": "1", "choukai_4_6": "3",
+    "choukai_4_7": "1", "choukai_4_8": "1", "choukai_4_9": "2", "choukai_4_10": "3", "choukai_4_11": "1", "choukai_4_12": "1", "choukai_4_13": "2",
+    "choukai_5_1": "2", "choukai_5_2": "2", "choukai_5_3a": "2", "choukai_5_3b": "3"
+  },
+  "scoring_weights": {
+    "goi_1": 1, "goi_2": 1, "goi_3": 1, "goi_4": 1, "goi_5": 1, "goi_6": 1,
+    "goi_7": 1, "goi_8": 1, "goi_9": 1, "goi_10": 1, "goi_11": 1, "goi_12": 1, "goi_13": 1,
+    "goi_14": 1, "goi_15": 1, "goi_16": 1, "goi_17": 1, "goi_18": 1, "goi_19": 1,
+    "goi_20": 2, "goi_21": 2, "goi_22": 2, "goi_23": 2, "goi_24": 2, "goi_25": 2,
+    "bunpou_26": 1, "bunpou_27": 1, "bunpou_28": 1, "bunpou_29": 1, "bunpou_30": 1,
+    "bunpou_31": 1, "bunpou_32": 1, "bunpou_33": 1, "bunpou_34": 1, "bunpou_35": 1,
+    "bunpou_36": 2, "bunpou_37": 2, "bunpou_38": 2, "bunpou_39": 2, "bunpou_40": 2,
+    "bunpou_41": 2, "bunpou_42": 2, "bunpou_43": 2, "bunpou_44": 2,
+    "dokkai_45": 2, "dokkai_46": 2, "dokkai_47": 2, "dokkai_48": 2,
+    "dokkai_49": 2, "dokkai_50": 2, "dokkai_51": 2, "dokkai_52": 2, "dokkai_53": 2,
+    "dokkai_54": 2, "dokkai_55": 2, "dokkai_56": 2, "dokkai_57": 2,
+    "dokkai_58": 2.5, "dokkai_59": 2.5, "dokkai_60": 2.5, "dokkai_61": 2.5,
+    "dokkai_62": 3, "dokkai_63": 3,
+    "dokkai_64": 3, "dokkai_65": 3, "dokkai_66": 3, "dokkai_67": 3, "dokkai_68": 3,
+    "dokkai_69": 3, "dokkai_70": 3,
+    "choukai_1_1": 2, "choukai_1_2": 2, "choukai_1_3": 2, "choukai_1_4": 2, "choukai_1_5": 2, "choukai_1_6": 2,
+    "choukai_2_1": 2, "choukai_2_2": 2, "choukai_2_3": 2, "choukai_2_4": 2, "choukai_2_5": 2, "choukai_2_6": 2,
+    "choukai_3_1": 2, "choukai_3_2": 2, "choukai_3_3": 2, "choukai_3_4": 2, "choukai_3_5": 2, "choukai_3_6": 2,
+    "choukai_4_1": 1, "choukai_4_2": 1, "choukai_4_3": 1, "choukai_4_4": 1, "choukai_4_5": 1, "choukai_4_6": 1,
+    "choukai_4_7": 1, "choukai_4_8": 1, "choukai_4_9": 1, "choukai_4_10": 1, "choukai_4_11": 1, "choukai_4_12": 1, "choukai_4_13": 1,
+    "choukai_5_1": 3, "choukai_5_2": 3, "choukai_5_3a": 3, "choukai_5_3b": 3
+  },
+  "score_formula": {
+    "vocab_grammar": {
+      "prefix": ["goi_", "bunpou_"],
+      "max": 59
+    },
+    "reading": {
+      "prefix": ["dokkai_"],
+      "max": 60
+    },
+    "listening": {
+      "prefix": ["choukai_"],
+      "max": 59
+    }
+  }
+}

@@ -16,9 +16,10 @@ jlpt_app/
 
 ####
 to-do:
-1]  fix result display (show wrong questions, summary view in chart in diff tab??)
-2] adjust pdf and answer sheet alignment (scroll bar?)
-3] audio display listening in diff session?
+1]  fix pdf display (cropped off??)
+2] .db is not displaying despite sqlite viewer is installed
+3] add in more papers (with json)
+4] login and authentication
 
 
     ------------------------
@@ -28,10 +29,13 @@ to-do:
     git push
 
     ## how to open webapp
-    streamlit run webapp.py
+    streamlit run 問題演習.py --server.headless true
+    streamlit run 問題演習.py
     Local URL: http://localhost:8501
     Network URL: http://192.168.1.102:8501
 
     ## how to open swagger (remember the directory)
     uvicorn swaggerapp:app --reload
     http://127.0.0.1:8000/docs
+
+    ## ctrl+C to restart frozen terminal

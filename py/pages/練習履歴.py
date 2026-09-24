@@ -1,6 +1,7 @@
 import streamlit as st
 import sqlite3
 import pandas as pd
+from datetime import datetime, timezone, timedelta
 
 def to_num(x):
     try:
@@ -136,10 +137,19 @@ for r in rows:
     paper = r[2]
     date_short = str(r[3]).split(" ")[0] if r[3] else "不明"
     is_archived = r[9]
+
+    # --- Convert UTC → Malaysia Local Time (UTC+8) ---
+    raw_date = r[3]  # Date is at index 3
+    try:
+        utc_dt = datetime.strptime(raw_date, "%Y-%m-%d %H:%M:%S")
+        local_dt = utc_dt + timedelta(hours=8)
+        display_date = local_dt.strftime("%Y-%m-%d %H:%M:%S")
+    except:
+        diplay_date = str(raw_date)
     
     c1, c2, c3 = st.columns([4, 2, 1])
     with c1:
-        st.write(f"**{paper}** — {date_short}")
+        st.write(f"**{paper}** — {display_date}")
     
     with c2:
         if not is_archived:
